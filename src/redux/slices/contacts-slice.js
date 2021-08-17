@@ -1,11 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-// const initialState = [
-//   { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-//   { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-//   { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-//   { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-// ];
+
 export const fetchContacts = createAsyncThunk(
   'contacts/fetchContacts',
   async () => {
@@ -16,6 +11,27 @@ export const fetchContacts = createAsyncThunk(
   },
 );
 
+export const addContact = createAsyncThunk(
+  'contacts/addContact',
+  async contact => {
+    const result = await axios.post(
+      'https://611a211bcbf1b30017eb54f5.mockapi.io/api/v1/contacts',
+      contact,
+    );
+    return result.data;
+  },
+);
+
+export const deleteContact = createAsyncThunk(
+  'contacts/deleteContact',
+  async id => {
+    await axios.delete(
+      `https://611a211bcbf1b30017eb54f5.mockapi.io/api/v1/contacts/${id}`,
+    );
+    return id;
+  },
+);
+
 const ItemsSlice = createSlice({
   name: 'contacts',
   initialState: {
@@ -23,23 +39,38 @@ const ItemsSlice = createSlice({
     status: null,
     error: null,
   },
-  reducers: {
-    addItem: (state, action) => [...state, action.payload],
-    deleteItem: (state, action) =>
-      state.filter(contact => contact.id !== action.payload),
-  },
+
   extraReducers: {
     [fetchContacts.fulfilled]: (state, action) => {
-      state.contacts = action.payload.data;
+      state.items = action.payload;
       state.status = null;
       state.error = null;
     },
-    [fetchContacts.pending]: (state, action) => {
+    [fetchContacts.pending]: (state, _) => {
       state.status = 'loading';
     },
-    [fetchContacts.rejected]: (state, action) => {
+    [fetchContacts.rejected]: (state, _) => {
       state.status = null;
       state.error = 'Error';
+    },
+
+    [addContact.fulfilled]: (state, action) => {
+      state.items = [...state.items, action.payload];
+      state.status = null;
+      state.error = null;
+    },
+    [addContact.pending]: (state, _) => {
+      state.status = 'loading';
+      state.error = null;
+    },
+    [addContact.rejected]: (state, _) => {
+      state.status = null;
+      state.error = 'Error';
+    },
+    [deleteContact.fulfilled]: (state, action) => {
+      state.items = state.items.filter(
+        contact => contact.id !== action.payload,
+      );
     },
   },
 });
